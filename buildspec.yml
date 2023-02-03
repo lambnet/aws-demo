@@ -11,7 +11,7 @@ phases:
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
       - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/demo-alvian
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
+      - IMAGE_TAG=1.0.${CODEBUILD_BUILD_NUMBER:latest}
   build:
     commands:
       - echo Entered the build phase...
@@ -21,6 +21,7 @@ phases:
       - echo Pushing the Docker images...
       - DOCKER_TOKEN=$(aws ecr get-login-password --region ap-southeast-1)
       - mvn spring-boot:build-image -DskipTests
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
       - echo Writing image definitions file...
       - printf '[{"name":"order-service","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
       - cat imagedefinitions.json
